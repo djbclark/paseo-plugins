@@ -380,6 +380,7 @@ export function PrRadar({
             if (routed.modeId) overrides = { ...overrides, modeId: routed.modeId };
             if (routed.contextMode) overrides = { ...overrides, contextMode: routed.contextMode };
             if (routed.options) overrides = { ...overrides, options: routed.options };
+            if (routed.labels) overrides = { ...overrides, labels: routed.labels };
           } catch (routerError) {
             const reason =
               routerError instanceof Error ? routerError.message : "Routing script failed.";

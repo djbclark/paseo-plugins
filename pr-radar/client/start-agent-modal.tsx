@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import type { CwdMode, PrRadarSettings } from "../shared/settings";
 import { listLocalDirs, type RoutingScriptResult, runRoutingScript } from "../shared/viewer-scope";
-import type { AgentLaunchOverrides, RadarRow } from "./radar";
+import { type AgentLaunchOverrides, buildAgentLabels, type RadarRow } from "./radar";
 
 export interface StartAgentLaunchRequest {
   row: RadarRow;
@@ -66,6 +66,11 @@ export function StartAgentModal({
   );
   const [routedLabels, setRoutedLabels] = useState<Record<string, string> | undefined>(undefined);
   const [routeReason, setRouteReason] = useState<string | null>(null);
+  // The labels the launch will actually carry from the routing script (after buildAgentLabels filtering).
+  const routedLabelText = Object.entries(buildAgentLabels("", { labels: routedLabels }))
+    .filter(([key]) => key !== "pr-radar.cwd")
+    .map(([key, value]) => `${key}=${value}`)
+    .join(", ");
   const [routeError, setRouteError] = useState<string | null>(null);
   const [routingBusy, setRoutingBusy] = useState(false);
   const activeRowIdRef = useRef<string | null>(null);
@@ -111,6 +116,8 @@ export function StartAgentModal({
     const invocationSeq = ++routingSeqRef.current;
     setRoutingBusy(true);
     setRouteError(null);
+    setRoutedOptions(undefined);
+    setRoutedLabels(undefined);
     try {
       const result: RoutingScriptResult = await invokeRouter({
         scriptPath: settings.routingScriptPath,
@@ -462,6 +469,9 @@ export function StartAgentModal({
               ) : null}
             </View>
             {routeReason ? <Text style={styles.hint}>{routeReason}</Text> : null}
+            {routedLabelText ? (
+              <Text style={styles.hint}>{`Labels from routing script: ${routedLabelText}`}</Text>
+            ) : null}
             {routeError ? (
               <Text style={{ color: theme.colors.statusDanger, fontSize: 12 }}>{routeError}</Text>
             ) : null}
